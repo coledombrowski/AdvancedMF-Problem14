@@ -1,0 +1,58 @@
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. SORTPGM.
+       AUTHOR. DOMBROWSKI.
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT VENDOR-FILE ASSIGN TO UT-S-INRECS.
+
+
+           SELECT SORT-FILE ASSIGN TO  UT-S-SORTWORK.
+
+
+           SELECT ACCOUNT-FILE ASSIGN TO UT-S-OUTRECS.
+
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD  VENDOR-FILE.
+       01  VENDOR-REC.
+           05  REC-TYPE-IN-VEND    PIC X.
+           05  FILLER              PIC X(21).
+           05  ACCT-NUM-IN-VEND    PIC X(4).
+           05  FILLER              PIC X(54).
+
+       SD  SORT-FILE.
+       01  SORT-REC.
+           05  FILLER                  PIC X(22).
+           05  ACCT-NUM-IN-SORT        PIC X(4).
+           05  FILLER                  PIC X(54).
+
+       FD  ACCOUNT-FILE.
+       01  ACCOUNT-REC                   PIC X(80).
+
+       WORKING-STORAGE SECTION.
+       01  EOF-VENDOR-WS           PIC X(3) VALUE 'NO'.
+
+       PROCEDURE DIVISION.
+       000-SORT SECTION.
+           SORT SORT-FILE
+               ON ASCENDING KEY ACCT-NUM-IN-SORT
+                   INPUT PROCEDURE 200-TEST-ACCOUNT
+                   GIVING ACCOUNT-FILE.
+           STOP RUN.
+
+       200-TEST-ACCOUNT SECTION.
+           OPEN INPUT VENDOR-FILE
+           PERFORM 300-PROCESS UNTIL EOF-VENDOR-WS = 'YES'
+           CLOSE VENDOR-FILE.
+
+       300-PROCESS SECTION.
+           READ VENDOR-FILE AT END MOVE 'YES' TO EOF-VENDOR-WS.
+           IF ACCT-NUM-IN-VEND IS >= 5000 AND < 6000
+               AND REC-TYPE-IN-VEND = 2
+               THEN MOVE VENDOR-REC TO SORT-REC
+                    RELEASE SORT-REC
+            END-IF.
